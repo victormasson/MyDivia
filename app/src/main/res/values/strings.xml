@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">MyDivia</string>
+    <string name="ApiLine">https://www.divia.fr/totem/recherche</string>
+    <string name="ApiStop">https://www.divia.fr/totem/appli_resultat/ligne/%d/arret/</string>
+    <string name="ApiTimeTable">https://www.divia.fr/totem/appli_resultat/ligne/%d/arret/%d_%d/ligne_back/%d</string>
+    <string name="ApiTimeTableTest">https://www.divia.fr/totem/appli_resultat/ligne/82/arret/1542_82/ligne_back/82</string>
+</resources>
