@@ -161,8 +161,6 @@ public class StopActivity extends AppCompatActivity {
     }
 
     private void displayLine(ArrayList<Stop> listStop) {
-        DatabaseHelper helper = new DatabaseHelper(this);
-        SQLiteDatabase db = helper.getWritableDatabase();
         invisibleProgressBar();
         StopAdapter adapter = new StopAdapter(listStop, this);
         listViewStop.setAdapter(adapter);

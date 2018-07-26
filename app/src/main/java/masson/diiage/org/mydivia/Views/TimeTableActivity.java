@@ -3,14 +3,18 @@ package masson.diiage.org.mydivia.Views;
 import android.content.Context;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toolbar;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -26,6 +30,7 @@ import java.util.regex.Pattern;
 
 import masson.diiage.org.mydivia.Adapter.StopAdapter;
 import masson.diiage.org.mydivia.Database.DatabaseHelper;
+import masson.diiage.org.mydivia.Entities.Bookmarks;
 import masson.diiage.org.mydivia.Entities.Line;
 import masson.diiage.org.mydivia.Entities.Stop;
 import masson.diiage.org.mydivia.Entities.TimeTable;
@@ -35,6 +40,7 @@ public class TimeTableActivity extends AppCompatActivity {
     static String extra_message = "session";
     static long lineId;
     static long stopId;
+    static Context context;
 
     Timer timer;
     TimerTask timerTask;
@@ -62,15 +68,46 @@ public class TimeTableActivity extends AppCompatActivity {
         lineId = intent.getLongExtra(StopActivity.extra_lineid, 0);
         stopId = intent.getLongExtra(StopActivity.extra_stopid, 0);
 
+        if (lineId == 0 && stopId == 0) {
+            lineId = intent.getLongExtra(BookmarksActivity.extra_message_idline, 0);
+            stopId = intent.getLongExtra(BookmarksActivity.extra_message_idstop, 0);
+        }
+        context = this;
         DatabaseHelper helper = new DatabaseHelper(this);
         SQLiteDatabase db = helper.getWritableDatabase();
 
         Line line = helper.getLine(db, lineId);
         setTitle("Horaires - " + line.getType() + " - " + line.getName());
 
-//        if (lineId != 0 && stopId != 0) {
-//            loadApi(lineId, stopId);
-//        }
+        final Button timeTableBookmarks = findViewById(R.id.timeTableBookmarks);
+        Bookmarks bookmarks = helper.getBookmarks(db, stopId, lineId);
+        if (bookmarks.getLineId() != 0 && bookmarks.getStopId() != 0) {
+            Drawable img = context.getResources().getDrawable(R.drawable.ic_star_black_24dp);
+            timeTableBookmarks.setCompoundDrawablesWithIntrinsicBounds(img, null, null, null);
+        }
+
+        timeTableBookmarks.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                DatabaseHelper helper = new DatabaseHelper(context);
+                SQLiteDatabase db = helper.getWritableDatabase();
+
+                Bookmarks bookmarks = helper.getBookmarks(db, stopId, lineId);
+                if (bookmarks.getLineId() == 0 && bookmarks.getStopId() == 0) {
+                    Bookmarks b = new Bookmarks(0, lineId, stopId);
+                    helper.addBookmarks(db, b);
+
+                    Drawable img = context.getResources().getDrawable(R.drawable.ic_star_black_24dp);
+                    timeTableBookmarks.setCompoundDrawablesWithIntrinsicBounds(img, null, null, null);
+                }
+                else {
+                    helper.deleteBookmarks(db, stopId, lineId);
+
+                    Drawable img = context.getResources().getDrawable(R.drawable.ic_star_border_black_24dp);
+                    timeTableBookmarks.setCompoundDrawablesWithIntrinsicBounds(img, null, null, null);
+                }
+            }
+        });
     }
 
     @Override

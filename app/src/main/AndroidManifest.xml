@@ -20,7 +20,8 @@
         </activity>
         <activity android:name=".Views.LineActivity" />
         <activity android:name=".Views.TimeTableActivity" />
-        <activity android:name=".Views.StopActivity"></activity>
+        <activity android:name=".Views.StopActivity" />
+        <activity android:name=".Views.BookmarksActivity"></activity>
     </application>
 
 </manifest>

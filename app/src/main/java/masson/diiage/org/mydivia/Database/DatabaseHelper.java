@@ -8,6 +8,7 @@ import android.util.Log;
 
 import java.util.ArrayList;
 
+import masson.diiage.org.mydivia.Entities.Bookmarks;
 import masson.diiage.org.mydivia.Entities.Line;
 import masson.diiage.org.mydivia.Entities.Stop;
 
@@ -37,10 +38,19 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             + TABLE_STOP_NAME + " TEXT,"
             + TABLE_STOP_ID_LINE + " INTEGER);";
 
+    public static final String TABLE_BOOKMARKS = "bookmarks";
+    public static final String TABLE_BOOKMARKS_ID = "id";
+    public static final String TABLE_BOOKMARKS_ID_LINE = "lineId";
+    public static final String TABLE_BOOKMARKS_ID_STOP = "stopId";
+
+    public static final String CREATE_TABLE_BOOKMARKS = "CREATE TABLE " + TABLE_BOOKMARKS + "("
+            + TABLE_BOOKMARKS_ID + " INTEGER PRIMARY KEY,"
+            + TABLE_BOOKMARKS_ID_LINE + " INTEGER,"
+            + TABLE_BOOKMARKS_ID_STOP + " INTEGER);";
+
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
-
 
     @Override
     public void onCreate(SQLiteDatabase db) { baseUpdateTo(db, 1); }
@@ -58,6 +68,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             case 1:
                 db.execSQL(CREATE_TABLE_LINE);
                 db.execSQL(CREATE_TABLE_STOP);
+                db.execSQL(CREATE_TABLE_BOOKMARKS);
                 break;
             default:
                 break;
@@ -70,6 +81,19 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public void addStop(SQLiteDatabase db, Stop stop) {
         db.insert(TABLE_STOP, null, stop.toContentValues());
+    }
+
+    public void addBookmarks(SQLiteDatabase db, Bookmarks bookmarks) {
+        long a = db.insert(TABLE_BOOKMARKS, null, bookmarks.toContentValues());
+    }
+
+    public void deleteBookmarks(SQLiteDatabase db, long stopId, long lineId) {
+        Bookmarks bookmarks = getBookmarks(db, stopId, lineId);
+        if (bookmarks != null) {
+            db.delete(TABLE_BOOKMARKS,
+                    TABLE_BOOKMARKS_ID_STOP + " = ? and " + TABLE_BOOKMARKS_ID_LINE + " = ?",
+                    new String[] { String.valueOf(stopId), String.valueOf(lineId) });
+        }
     }
 
     public ArrayList<Line> getLine(SQLiteDatabase db) {
@@ -145,5 +169,84 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             listStop.add(stop);
         }
         return listStop;
+    }
+
+    public Bookmarks getBookmarks(SQLiteDatabase db, long stopId, long lineId) {
+        Cursor cursor = db.rawQuery("", null);
+        if (stopId != 0 && lineId != 0) {
+            cursor = db.query(TABLE_BOOKMARKS,
+                    new String[] { TABLE_BOOKMARKS_ID, TABLE_BOOKMARKS_ID_LINE, TABLE_BOOKMARKS_ID_STOP },
+                    TABLE_BOOKMARKS_ID_STOP + " = ? and " + TABLE_BOOKMARKS_ID_LINE + " = ?",
+                    new String[] { String.valueOf(stopId), String.valueOf(lineId) },
+                    null,null,null);
+        }
+        Bookmarks bookmarks = new Bookmarks();
+        while(cursor.moveToNext()){
+            final long bookmarksId = cursor.getLong(0);
+            final long bookmarksIdLine = cursor.getLong(1);
+            final long bookmarksIdStop = cursor.getLong(2);
+
+            bookmarks = new Bookmarks() {{
+                setId(bookmarksId);
+                setLineId(bookmarksIdLine);
+                setStopId(bookmarksIdStop);
+            }};
+        }
+
+        return bookmarks;
+    }
+
+    public boolean existBookmarks(SQLiteDatabase db, long stopId, long lineId) {
+        Bookmarks bookmarks = getBookmarks(db, stopId, lineId);
+        if (bookmarks != null || bookmarks.getId() != 0) {
+            return true;
+        }
+        return false;
+    }
+
+    public ArrayList<Bookmarks> getBookmarks(SQLiteDatabase db) {
+
+        Cursor cursor = db.rawQuery("SELECT "
+                    + " bm." + TABLE_BOOKMARKS_ID + ", bm." + TABLE_BOOKMARKS_ID_LINE + ", bm." + TABLE_BOOKMARKS_ID_STOP
+                    + ", line." + TABLE_LINE_NAME + ", line." + TABLE_LINE_TYPE + ", line." + TABLE_LINE_DIRECTION + ", stop." + TABLE_STOP_NAME
+                    + " FROM " + TABLE_BOOKMARKS + " bm "
+                    + " JOIN " + TABLE_LINE + " line ON " + "bm." + TABLE_BOOKMARKS_ID_LINE + " = line." + TABLE_LINE_ID
+                    + " JOIN " + TABLE_STOP + " stop ON " + "bm." + TABLE_BOOKMARKS_ID_STOP + " = stop." + TABLE_STOP_ID
+                , null);
+
+        ArrayList<Bookmarks> listBookmarks = new ArrayList<Bookmarks>();
+        while(cursor.moveToNext()){
+            final long bookmarksId = cursor.getLong(0);
+            final long bookmarksLineId = cursor.getLong(1);
+            final long bookmarksStopId = cursor.getLong(2);
+
+            final String lineName = cursor.getString(3);
+            final String lineType = cursor.getString(4);
+            final String lineDirection = cursor.getString(5);
+            final String stopName = cursor.getString(6);
+
+            final Line line = new Line() {{
+                setId(bookmarksLineId);
+                setName(lineName);
+                setType(lineType);
+                setDirection(lineDirection);
+            }};
+
+            final Stop stop = new Stop() {{
+                setId(bookmarksStopId);
+                setName(stopName);
+            }};
+
+            Bookmarks bookmarks = new Bookmarks() {{
+                setId(bookmarksId);
+                setLineId(bookmarksLineId);
+                setStopId(bookmarksStopId);
+                setLine(line);
+                setStop(stop);
+            }};
+
+            listBookmarks.add(bookmarks);
+        }
+        return listBookmarks;
     }
 }

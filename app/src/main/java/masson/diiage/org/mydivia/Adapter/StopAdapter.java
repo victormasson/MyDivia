@@ -1,7 +1,10 @@
 package masson.diiage.org.mydivia.Adapter;
 
 import android.app.Activity;
+import android.support.constraint.ConstraintLayout;
+import android.support.v4.view.GestureDetectorCompat;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -20,7 +23,7 @@ public class StopAdapter extends BaseAdapter {
     public StopAdapter(ArrayList<Stop> listStop, Activity context) {
         this.listStop = listStop;
         this.context = context;
-        layoutInflater = LayoutInflater.from(context);
+        this.layoutInflater = LayoutInflater.from(context);
     }
 
     @Override
